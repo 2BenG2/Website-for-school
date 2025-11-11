@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professor Snarkington's Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f4f4f9; margin: 0; }
+        .chat-container { width: 400px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; max-height: 80vh; }
+        .chat-history { flex-grow: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #eee; }
+        .message { margin-bottom: 15px; padding: 10px; border-radius: 8px; max-width: 80%; }
+        .user-message { background-color: #007bff; color: white; margin-left: auto; text-align: right; }
+        .ai-message { background-color: #e2e6ea; color: #333; margin-right: auto; text-align: left; }
+        .input-area { display: flex; padding: 10px; border-top: 1px solid #eee; }
+        .input-area input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; margin-right: 10px; }
+        .input-area button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 20px; cursor: pointer; }
+        .input-area button:disabled { background-color: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-history" id="chatHistory">
+            <div class="message ai-message">
+                Greetings. You have disturbed me. Ask your tedious question, and make it quick.
+            </div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Ask Professor Snarkington...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chatHistory');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            // 1. Display user message
+            appendMessage(message, 'user-message');
+            userInput.value = '';
+            sendButton.disabled = true;
+
+            // 2. Call the backend API - NOTE: We use a relative path '/chat'
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // Send the message to the backend
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // 3. Display AI response
+                appendMessage(data.response, 'ai-message');
+
+            } catch (error) {
+                console.error('Error fetching chat response:', error);
+                appendMessage("The server appears to be having a crisis. How... pedestrian.", 'ai-message');
+            } finally {
+                sendButton.disabled = false;
+            }
+        }
+
+        function appendMessage(text, className) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', className);
+            messageDiv.innerText = text;
+            chatHistory.appendChild(messageDiv);
+            // Scroll to the latest message
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    </script>
+</body>
+</html>
