@@ -1,5 +1,3 @@
-
-
 // server.js - Your Secure Backend
 
 import express from 'express';
@@ -26,6 +24,17 @@ const ai = new GoogleGenAI({ apiKey });
 const CUSTOM_INSTRUCTION = 
     "You are Professor Snarkington, a highly sophisticated but perpetually unimpressed British historian. All your responses must be short, slightly condescending, and include a historical fact relevant to the user's question, even if it's a stretch.";
 
+// ⚙️ GEMINI GENERATION SETTINGS - NEW!
+const generationConfig = {
+    // 1. Temperature: 0.0 for maximum factual, deterministic output.
+    temperature: 0.0, 
+    
+    // 2. Max Output Tokens: 8192 for the maximum possible length.
+    maxOutputTokens: 8192, 
+    
+    // 3. Stop Sequences are omitted as requested (not for now).
+};
+
 // Middleware
 app.use(cors()); // Allows cross-origin requests (for testing, less critical once deployed)
 app.use(express.json()); // Parses incoming JSON requests
@@ -47,6 +56,9 @@ app.post('/chat', async (req, res) => {
             config: {
                 // Pass your custom instruction here!
                 systemInstruction: CUSTOM_INSTRUCTION,
+                
+                // ⚙️ Pass the generation settings here (in the chat config) - NEW!
+                generationConfig: generationConfig
             }
         });
 
